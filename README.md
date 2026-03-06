@@ -59,3 +59,7 @@ A fullstack application for managing and running API tests with concurrency supp
 - Set concurrency configuration per test run
 - Poll test run results
 - View comprehensive results displaying total requests, average response time, passed assertions, and failed requests.
+
+## Demo Snapshot
+<img width="1841" height="973" alt="Screenshot from 2026-03-06 07-22-20" src="https://github.com/user-attachments/assets/37ad10f4-a200-4df1-be92-9649849a1a5c" />
+
