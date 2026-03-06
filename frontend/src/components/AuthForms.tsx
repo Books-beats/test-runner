@@ -2,6 +2,8 @@ import { useState } from "react";
 import { useAuth } from "../context/AuthContext";
 import { User, Lock, Mail } from "lucide-react";
 
+const API_BASE = import.meta.env.VITE_API_URL || "";
+
 export default function AuthForms() {
   const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState("");
@@ -16,7 +18,7 @@ export default function AuthForms() {
     setError("");
     setIsLoading(true);
 
-    const url = isLogin ? "/login" : "/register";
+    const url = isLogin ? `${API_BASE}/login` : `${API_BASE}/register`;
 
     try {
       const res = await fetch(url, {

@@ -6,6 +6,8 @@ import TestItem from "./TestItem";
 import TestResultModal from "./TestResultModal";
 import RunTestModal from "./RunTestModal";
 
+const API_BASE = import.meta.env.VITE_API_URL || "";
+
 export default function TestList({
   refreshTrigger,
 }: {
@@ -26,7 +28,7 @@ export default function TestList({
 
   const fetchTests = async () => {
     try {
-      const res = await fetch("/tests", {
+      const res = await fetch(`${API_BASE}/tests`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       if (res.ok) {
@@ -75,7 +77,7 @@ export default function TestList({
 
         const interval = window.setInterval(async () => {
           try {
-            const res = await fetch(`/tests/${runData.runId}`, {
+            const res = await fetch(`${API_BASE}/tests/${runData.runId}`, {
               headers: { Authorization: `Bearer ${token}` },
             });
 
@@ -132,7 +134,7 @@ export default function TestList({
 
     try {
       setConcurrencyDialogOpen(false);
-      const res = await fetch(`/tests/${testId}/run`, {
+      const res = await fetch(`${API_BASE}/tests/${testId}/run`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -162,7 +164,7 @@ export default function TestList({
 
   const handleShowResult = async (runId: number, testId: number) => {
     try {
-      const res = await fetch(`/tests/${runId}`, {
+      const res = await fetch(`${API_BASE}/tests/${runId}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       if (res.ok) {

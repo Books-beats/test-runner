@@ -1,12 +1,19 @@
 package routes
 
 import (
+	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"main.go/handlers"
 	"main.go/middlewares"
 )
 
 func RegisterRoutes(r *gin.Engine) {
+	// CORS Configuration
+	corsConfig := cors.DefaultConfig()
+	corsConfig.AllowAllOrigins = true // Or use os.Getenv("VITE_API_URL") if strict
+	corsConfig.AllowHeaders = []string{"Origin", "Content-Length", "Content-Type", "Authorization"}
+	r.Use(cors.New(corsConfig))
+
 	// Auth Routes
 	r.POST("/register", handlers.RegisterUser)
 	r.POST("/login", handlers.LoginUser)
