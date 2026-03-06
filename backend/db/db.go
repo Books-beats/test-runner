@@ -14,13 +14,16 @@ func InitDB(connString string) {
 
 	pool, err := pgxpool.New(ctx, connString)
 	if err != nil {
-		log.Fatal("Unable to connect to database:", err)
+		log.Printf("Unable to connect to database: %v\n", err)
 	}
 
-	if err := pool.Ping(ctx); err != nil {
-		log.Fatal("Database not reachable:", err)
+	if pool != nil {
+		if err := pool.Ping(ctx); err != nil {
+			log.Printf("Database not reachable: %v\n", err)
+		} else {
+			log.Println("Connected to PostgreSQL")
+		}
 	}
 
 	Pool = pool
-	log.Println("Connected to PostgreSQL")
 }

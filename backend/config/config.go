@@ -2,6 +2,7 @@ package config
 
 import (
 	"log"
+	"net/url"
 	"os"
 
 	"github.com/joho/godotenv"
@@ -17,15 +18,15 @@ func LoadConfig() *Config {
 		log.Println("No .env file found, using system env")
 	}
 
-	dbUrl := "postgres://" +
-		os.Getenv("DB_USER") + ":" +
-		os.Getenv("DB_PASSWORD") + "@" +
-		os.Getenv("DB_HOST") + ":" +
-		os.Getenv("DB_PORT") + "/" +
-		os.Getenv("DB_NAME") +
-		"?sslmode=" + os.Getenv("DB_SSLMODE")
+	u := &url.URL{
+		Scheme:   "postgres",
+		User:     url.UserPassword(os.Getenv("DB_USER"), os.Getenv("DB_PASSWORD")),
+		Host:     os.Getenv("DB_HOST") + ":" + os.Getenv("DB_PORT"),
+		Path:     "/" + os.Getenv("DB_NAME"),
+		RawQuery: "sslmode=" + os.Getenv("DB_SSLMODE") + "&pgbouncer=true&pool_timeout=10",
+	}
 
 	return &Config{
-		DBUrl: dbUrl,
+		DBUrl: u.String(),
 	}
 }
