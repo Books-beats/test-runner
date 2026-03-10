@@ -19,6 +19,7 @@ func RegisterUser(email, password string) (int64, error) {
 	// Hash password
 	hashedBytes, err := bcrypt.GenerateFromPassword([]byte(password), 14)
 	if err != nil {
+		log.Println("Failed to generate hash", err)
 		return 0, err
 	}
 
@@ -28,6 +29,7 @@ func RegisterUser(email, password string) (int64, error) {
 	var userID int64
 	err = db.Pool.QueryRow(ctx, query, email, string(hashedBytes)).Scan(&userID)
 	if err != nil {
+		log.Println("Failed to insert user", err)
 		return 0, err
 	}
 

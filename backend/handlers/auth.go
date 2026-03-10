@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"log"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -27,12 +28,15 @@ func RegisterUser(c *gin.Context) {
 	}
 
 	userID, err := models.RegisterUser(input.Email, input.Password)
+	log.Println(userID, err)
 	if err != nil {
+		log.Println("Failed to register user ", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to register user"})
 		return
 	}
 
 	token, err := utils.GenerateToken(userID, input.Email)
+	log.Println(token, err)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to generate token"})
 		return
