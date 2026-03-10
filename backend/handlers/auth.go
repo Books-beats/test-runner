@@ -52,6 +52,7 @@ func LoginUser(c *gin.Context) {
 	}
 
 	user, err := models.AuthenticateUser(input.Email, input.Password)
+
 	if err != nil {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid email or password"})
 		return

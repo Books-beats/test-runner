@@ -61,7 +61,7 @@ export default function TestForm({ onRefresh }: { onRefresh: () => void }) {
     };
 
     try {
-      const res = await fetch(`${API_BASE}/tests/`, {
+      const res = await fetch(`${API_BASE}/tests`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

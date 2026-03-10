@@ -23,7 +23,7 @@ func LoadConfig() *Config {
 		User:     url.UserPassword(os.Getenv("DB_USER"), os.Getenv("DB_PASSWORD")),
 		Host:     os.Getenv("DB_HOST") + ":" + os.Getenv("DB_PORT"),
 		Path:     "/" + os.Getenv("DB_NAME"),
-		RawQuery: "sslmode=" + os.Getenv("DB_SSLMODE") + "&pgbouncer=true&pool_timeout=10",
+		RawQuery: "sslmode=" + os.Getenv("DB_SSLMODE"),
 	}
 
 	return &Config{

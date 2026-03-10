@@ -25,9 +25,9 @@ func RegisterRoutes(r *gin.Engine) {
 	// Adding inside curly braces to define a local scope for the group variable.
 	// Just for visual organization, not necessary for functionality.
 	{
-		group.GET("/", handlers.GetAllTests)
-		group.POST("/", handlers.CreateTest)
-		group.POST("/:id/run", handlers.CreateTestRun)
-		group.GET("/:id", handlers.GetTestResult)
+		group.GET("", handlers.GetAllTests)
+		group.POST("", handlers.CreateTest)
+		group.POST(":id/run", handlers.CreateTestRun)
+		group.GET(":id", handlers.GetTestResult)
 	}
 }
