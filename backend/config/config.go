@@ -18,12 +18,16 @@ func LoadConfig() *Config {
 		log.Println("No .env file found, using system env")
 	}
 
+	q := url.Values{}
+	q.Add("sslmode", os.Getenv("DB_SSLMODE"))
+	q.Add("channel_binding", os.Getenv("DB_CHANNEL_BINDING"))
+
 	u := &url.URL{
-		Scheme:   "postgres",
+		Scheme:   "postgresql",
 		User:     url.UserPassword(os.Getenv("DB_USER"), os.Getenv("DB_PASSWORD")),
 		Host:     os.Getenv("DB_HOST") + ":" + os.Getenv("DB_PORT"),
 		Path:     "/" + os.Getenv("DB_NAME"),
-		RawQuery: "sslmode=" + os.Getenv("DB_SSLMODE"),
+		RawQuery: q.Encode(),
 	}
 
 	return &Config{
