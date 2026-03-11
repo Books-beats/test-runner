@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "../context/AuthContext";
-import { X } from "lucide-react";
 import { Test, TestRunResult } from "../types";
 import TestItem from "./TestItem";
 import TestResultModal from "./TestResultModal";
