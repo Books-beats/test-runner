@@ -29,8 +29,6 @@ func ValidateTestRunRequest(testID int64, concurrency int, c *gin.Context) (bool
 	e1 := godotenv.Load()
 	if e1 != nil {
 		log.Println("exits", exists, "e1", e1)
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to load environment variables"})
-		return false, e1
 	}
 
 	// Check if concurrency is within allowed limits
