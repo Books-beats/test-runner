@@ -16,7 +16,6 @@ func ValidateTestRunRequest(testID int64, concurrency int, c *gin.Context) (bool
 	// Check if testID exists in db
 	exists, err := models.CheckTestIdExists(testID)
 	if err != nil {
-		log.Println("er", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "internal server error"})
 		return false, err
 	}
@@ -28,18 +27,18 @@ func ValidateTestRunRequest(testID int64, concurrency int, c *gin.Context) (bool
 
 	e1 := godotenv.Load()
 	if e1 != nil {
-		log.Println("exits", exists, "e1", e1)
+		log.Println("e1", e1)
 	}
 
 	// Check if concurrency is within allowed limits
 	maxallowedconcurrency := os.Getenv("MAX_ALLOWED_CONCURRENCY")
 	maxallowedconcurrencyInt, _ := strconv.Atoi(maxallowedconcurrency)
-	log.Println("maxon", maxallowedconcurrency)
+
 	if concurrency > maxallowedconcurrencyInt {
 		c.JSON(http.StatusBadRequest, gin.H{"error": `Concurrency exceeds the maximum allowed limit of` + maxallowedconcurrency})
 		return false, nil
 	}
-	log.Println("tst", testID, concurrency)
+
 	return true, nil
 }
 
@@ -68,7 +67,7 @@ func CreateTestRun(c *gin.Context) {
 	}
 
 	isValid, _ := ValidateTestRunRequest(testId, request.Concurrency, c)
-	log.Println("isvaild", isValid, testIdStr, testId)
+
 	if !isValid {
 		return
 	}
@@ -76,7 +75,6 @@ func CreateTestRun(c *gin.Context) {
 	testRunId, status, err := services.StartTestRun(testId, request.Concurrency)
 
 	if err != nil {
-		log.Println(err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "internal server error: "})
 		return
 	}

@@ -2,7 +2,6 @@ package models
 
 import (
 	"context"
-	"log"
 	"time"
 
 	"main.go/db"
@@ -48,7 +47,6 @@ func CreateTestRun(testID int64, concurrency int) (int64, string, error) {
 	err := db.Pool.QueryRow(ctx, query, testID, concurrency).Scan(&testRunID, &status)
 
 	if err != nil {
-		log.Println("Model error:", err)
 		return 0, "stopped", err
 	}
 

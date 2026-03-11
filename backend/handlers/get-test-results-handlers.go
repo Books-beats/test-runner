@@ -1,7 +1,6 @@
 package handlers
 
 import (
-	"log"
 	"net/http"
 	"strconv"
 
@@ -20,9 +19,8 @@ func GetTestResult(c *gin.Context) {
 	}
 
 	result, err := models.GetTestRunResult(testId)
-	log.Println("result", result)
+
 	if err != nil {
-		log.Println("error", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Test result not found"})
 		return
 	}
