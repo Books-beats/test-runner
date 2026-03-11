@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"io"
+	"log"
 	"net/http"
 	"reflect"
 	"strings"
@@ -16,6 +17,7 @@ import (
 func UpdateTestRun(testRunId int64) {
 	results, err := models.GetJobResultsByTestRunID(testRunId)
 	if err != nil {
+		log.Println("Failed to get job results by test run id: ", err)
 		return
 	}
 	total := len(results)
@@ -80,6 +82,7 @@ func executeJob(testID int64, testRunId int64, jobID int, resultsChan chan<- mod
 		errStr := e.Error()
 		jobresult.Error = &errStr
 		resultsChan <- jobresult
+		log.Println("Failed to get test by id: ", e)
 		return
 	}
 
@@ -97,6 +100,7 @@ func executeJob(testID int64, testRunId int64, jobID int, resultsChan chan<- mod
 		errStr := e1.Error()
 		jobresult.Error = &errStr
 		resultsChan <- jobresult
+		log.Println("Failed to create a request: ", e1)
 		return
 	}
 
@@ -112,6 +116,7 @@ func executeJob(testID int64, testRunId int64, jobID int, resultsChan chan<- mod
 	if e2 != nil {
 		errStr := e2.Error()
 		jobresult.Error = &errStr
+		log.Println("Failed to send the request: ", e2)
 		return
 	}
 	defer response.Body.Close() // must close the response body after reading to free up resources
@@ -135,6 +140,7 @@ func executeJob(testID int64, testRunId int64, jobID int, resultsChan chan<- mod
 		errStr := e3.Error()
 		jobresult.Error = &errStr
 		resultsChan <- jobresult
+		log.Println("Failed to read the res body: ", e3)
 		return
 	}
 
@@ -164,6 +170,7 @@ func runJobs(testID int64, concurrency int, testRunID int64) {
 	for i := 0; i < concurrency; i++ {
 		_, e3 := models.CreateJob(testRunID, i)
 		if e3 != nil {
+			log.Println("Failed to create job: ", e3)
 			return
 		}
 	}
@@ -207,6 +214,7 @@ func StartTestRun(testID int64, concurrency int) (int64, string, error) {
 	// Create a test run entry in the database with status "pending"
 	testRunID, status, e2 := models.CreateTestRun(testID, concurrency)
 	if e2 != nil {
+		log.Println("Failed to create test run: ", e2)
 		return 0, "stopped", e2
 	}
 	go runJobs(testID, concurrency, testRunID)

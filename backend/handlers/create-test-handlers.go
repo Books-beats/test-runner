@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"log"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -24,12 +25,14 @@ func CreateTest(c *gin.Context) {
 	if err != nil {
 		// http.StatusBadRequest is a constant that represents HTTP status code 400.
 		// gin.H type is a shortcut for map[string]interface{} & is used in Gin to create JSON responses.
+		log.Println("Error in json binding: ", err)
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
 	testID, err := models.CreateTest(newTest, userID)
 	if err != nil {
+		log.Println("Failed to create test: ", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "internal server error: " + err.Error()})
 		return
 	}

@@ -16,11 +16,13 @@ func ValidateTestRunRequest(testID int64, concurrency int, c *gin.Context) (bool
 	// Check if testID exists in db
 	exists, err := models.CheckTestIdExists(testID)
 	if err != nil {
+		log.Println("Failed to check test id: ", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "internal server error"})
 		return false, err
 	}
 
 	if !exists {
+		log.Println("Test id doesn't exists")
 		c.JSON(http.StatusNotFound, gin.H{"error": "Test ID not found"})
 		return false, nil
 	}
@@ -35,6 +37,7 @@ func ValidateTestRunRequest(testID int64, concurrency int, c *gin.Context) (bool
 	maxallowedconcurrencyInt, _ := strconv.Atoi(maxallowedconcurrency)
 
 	if concurrency > maxallowedconcurrencyInt {
+		log.Println("Concurrency exceeds")
 		c.JSON(http.StatusBadRequest, gin.H{"error": `Concurrency exceeds the maximum allowed limit of` + maxallowedconcurrency})
 		return false, nil
 	}
@@ -54,6 +57,7 @@ func CreateTestRun(c *gin.Context) {
 
 	testId, err := strconv.ParseInt(testIdStr, 10, 64)
 	if err != nil {
+		log.Println("Invalid test id: ", err)
 		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid test id"})
 		return
 	}
@@ -62,6 +66,7 @@ func CreateTestRun(c *gin.Context) {
 
 	e := c.ShouldBindJSON(&request)
 	if e != nil {
+		log.Println("Failed to bind", e)
 		c.JSON(http.StatusBadRequest, gin.H{"error": e.Error()})
 		return
 	}
@@ -75,6 +80,7 @@ func CreateTestRun(c *gin.Context) {
 	testRunId, status, err := services.StartTestRun(testId, request.Concurrency)
 
 	if err != nil {
+		log.Println("Failed to start test run: ", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "internal server error: "})
 		return
 	}

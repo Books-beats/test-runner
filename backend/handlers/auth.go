@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"log"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -22,6 +23,7 @@ func RegisterUser(c *gin.Context) {
 	var input RegisterInput
 	// Validate user input (email & password)
 	if err := c.ShouldBindJSON(&input); err != nil {
+		log.Println("Invalid user input: ", err)
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
@@ -29,6 +31,7 @@ func RegisterUser(c *gin.Context) {
 	userID, err := models.RegisterUser(input.Email, input.Password)
 
 	if err != nil {
+		log.Println("Failer to register user: ", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to register user"})
 		return
 	}
@@ -36,6 +39,7 @@ func RegisterUser(c *gin.Context) {
 	token, err := utils.GenerateToken(userID, input.Email)
 
 	if err != nil {
+		log.Println("Failed to generate token: ", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to generate token"})
 		return
 	}
@@ -49,6 +53,7 @@ func RegisterUser(c *gin.Context) {
 func LoginUser(c *gin.Context) {
 	var input LoginInput
 	if err := c.ShouldBindJSON(&input); err != nil {
+		log.Println("Failed to login: ", err)
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
@@ -56,12 +61,14 @@ func LoginUser(c *gin.Context) {
 	user, err := models.AuthenticateUser(input.Email, input.Password)
 
 	if err != nil {
+		log.Println("Failed to authenticate: ", err)
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid email or password"})
 		return
 	}
 
 	token, err := utils.GenerateToken(user.ID, user.Email)
 	if err != nil {
+		log.Println("Failed to generate token: ", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to generate token"})
 		return
 	}
