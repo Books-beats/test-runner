@@ -20,7 +20,11 @@ func LoadConfig() *Config {
 
 	q := url.Values{}
 	q.Add("sslmode", os.Getenv("DB_SSLMODE"))
-	q.Add("channel_binding", os.Getenv("DB_CHANNEL_BINDING"))
+
+	// Need channel binding param only for neon
+	if os.Getenv("APP_ENV") == "production" {
+		q.Add("channel_binding", os.Getenv("DB_CHANNEL_BINDING"))
+	}
 
 	u := &url.URL{
 		Scheme:   "postgresql",

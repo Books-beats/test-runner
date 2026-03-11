@@ -3,6 +3,7 @@ package services
 import (
 	"bytes"
 	"io"
+	"log"
 	"net/http"
 	"sync"
 	"time"
@@ -177,6 +178,7 @@ func StartTestRun(testID int64, concurrency int) (int64, string, error) {
 	// Create a test run entry in the database with status "pending"
 	testRunID, status, e2 := models.CreateTestRun(testID, concurrency)
 	if e2 != nil {
+		log.Println("ste", e2)
 		return 0, "stopped", e2
 	}
 	go runJobs(testID, concurrency, testRunID)

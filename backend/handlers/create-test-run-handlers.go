@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"log"
 	"net/http"
 	"os"
 	"strconv"
@@ -74,6 +75,7 @@ func CreateTestRun(c *gin.Context) {
 	testRunId, status, err := services.StartTestRun(testId, request.Concurrency)
 
 	if err != nil {
+		log.Println(err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "internal server error: "})
 		return
 	}
