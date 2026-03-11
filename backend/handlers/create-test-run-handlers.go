@@ -16,6 +16,7 @@ func ValidateTestRunRequest(testID int64, concurrency int, c *gin.Context) (bool
 	// Check if testID exists in db
 	exists, err := models.CheckTestIdExists(testID)
 	if err != nil {
+		log.Println("er", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "internal server error"})
 		return false, err
 	}
@@ -67,7 +68,7 @@ func CreateTestRun(c *gin.Context) {
 	}
 
 	isValid, _ := ValidateTestRunRequest(testId, request.Concurrency, c)
-
+	log.Println("isvaild", isValid, testIdStr, testId)
 	if !isValid {
 		return
 	}
