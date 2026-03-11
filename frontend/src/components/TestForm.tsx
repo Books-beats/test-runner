@@ -1,6 +1,7 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Plus, Trash2 } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
+import { Test } from "../types";
 
 const API_BASE = import.meta.env.VITE_API_URL || "";
 
@@ -9,16 +10,54 @@ interface Header {
   value: string;
 }
 
-export default function TestForm({ onRefresh }: { onRefresh: () => void }) {
+interface TestFormProps {
+  onRefresh: () => void;
+  initialTest?: Test | null;
+}
+
+export default function TestForm({ onRefresh, initialTest }: TestFormProps) {
   const { token } = useAuth();
+
   const [name, setName] = useState("");
   const [url, setUrl] = useState("");
   const [method, setMethod] = useState("GET");
   const [headers, setHeaders] = useState<Header[]>([{ key: "", value: "" }]);
   const [body, setBody] = useState("");
   const [expectedResponse, setExpectedResponse] = useState("");
+  const [statusCode, setStatusCode] = useState<number | null>(null);
+
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const isEditing = !!initialTest;
+
+  useEffect(() => {
+    if (!initialTest) return;
+
+    setName(initialTest.name);
+    setUrl(initialTest.url);
+    setMethod(initialTest.method);
+
+    if (initialTest.headers && Object.keys(initialTest.headers).length > 0) {
+      const headerArr: Header[] = Object.entries(initialTest.headers).map(
+        ([key, value]) => ({
+          key,
+          value: value === undefined || value === null ? "" : String(value),
+        }),
+      );
+      setHeaders(headerArr);
+    } else {
+      setHeaders([{ key: "", value: "" }]);
+    }
+
+    setBody(initialTest.body || "");
+    setExpectedResponse(initialTest.expected_response || "");
+    setStatusCode(initialTest.status_code || null);
+
+    document.querySelector(".form-container")?.scrollIntoView({
+      behavior: "smooth",
+    });
+  }, [initialTest]);
 
   const handleAddHeader = () => {
     setHeaders([...headers, { key: "", value: "" }]);
@@ -35,7 +74,17 @@ export default function TestForm({ onRefresh }: { onRefresh: () => void }) {
   };
 
   const handleRemoveHeader = (index: number) => {
-    setHeaders(headers.filter((_: any, i: number) => i !== index));
+    setHeaders(headers.filter((_, i) => i !== index));
+  };
+
+  const resetForm = () => {
+    setName("");
+    setUrl("");
+    setMethod("GET");
+    setHeaders([{ key: "", value: "" }]);
+    setBody("");
+    setExpectedResponse("");
+    setStatusCode(null);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -58,11 +107,18 @@ export default function TestForm({ onRefresh }: { onRefresh: () => void }) {
       headers: headersObj,
       body: body || null,
       expected_response: expectedResponse,
+      status_code: statusCode,
     };
 
     try {
-      const res = await fetch(`${API_BASE}/tests`, {
-        method: "POST",
+      const endpoint = isEditing
+        ? `${API_BASE}/tests/${initialTest?.id}/edit`
+        : `${API_BASE}/tests`;
+
+      const methodType = isEditing ? "PUT" : "POST";
+
+      const res = await fetch(endpoint, {
+        method: methodType,
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
@@ -72,23 +128,14 @@ export default function TestForm({ onRefresh }: { onRefresh: () => void }) {
 
       if (!res.ok) {
         const data = await res.json();
-        throw new Error(data.error || "Failed to create test");
+        throw new Error(data.error || "Request failed");
       }
 
-      // Reset form
-      setName("");
-      setUrl("");
-      setMethod("GET");
-      setHeaders([{ key: "", value: "" }]);
-      setBody("");
-      setExpectedResponse("");
+      resetForm();
       onRefresh();
     } catch (err: unknown) {
-      if (err instanceof Error) {
-        setError(err.message);
-      } else {
-        setError(String(err));
-      }
+      if (err instanceof Error) setError(err.message);
+      else setError(String(err));
     } finally {
       setIsSubmitting(false);
     }
@@ -96,7 +143,8 @@ export default function TestForm({ onRefresh }: { onRefresh: () => void }) {
 
   return (
     <div className="card form-container">
-      <h2>Create New Test</h2>
+      <h2>{isEditing ? "Edit Test" : "Create New Test"}</h2>
+
       <p
         className="text-secondary"
         style={{ marginTop: "0.5rem", marginBottom: "1.5rem" }}
@@ -206,7 +254,7 @@ export default function TestForm({ onRefresh }: { onRefresh: () => void }) {
         </div>
 
         <div className="form-group">
-          <label className="form-label">Request Body (Optional)</label>
+          <label className="form-label">Request Body</label>
           <textarea
             placeholder='{"foo": "bar"}'
             value={body}
@@ -224,13 +272,32 @@ export default function TestForm({ onRefresh }: { onRefresh: () => void }) {
           />
         </div>
 
+        <div className="form-group">
+          <label className="form-label">Expected Status Code</label>
+          <input
+            type="number"
+            required
+            value={statusCode ?? ""}
+            placeholder="200"
+            onChange={(e) =>
+              setStatusCode(e.target.value ? Number(e.target.value) : null)
+            }
+          />
+        </div>
+
         <button
           type="submit"
           className="btn btn-primary"
           style={{ width: "100%", marginTop: "1rem" }}
           disabled={isSubmitting}
         >
-          {isSubmitting ? "Creating Test..." : "Create Test"}
+          {isSubmitting
+            ? isEditing
+              ? "Updating Test..."
+              : "Creating Test..."
+            : isEditing
+              ? "Update Test"
+              : "Create Test"}
         </button>
       </form>
     </div>

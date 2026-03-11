@@ -29,5 +29,7 @@ func RegisterRoutes(r *gin.Engine) {
 		group.POST("", handlers.CreateTest)
 		group.POST(":id/run", handlers.CreateTestRun)
 		group.GET(":id", handlers.GetTestResult)
+		group.DELETE(":id/delete", handlers.Delete)
+		group.PUT(":id/edit", handlers.Update)
 	}
 }

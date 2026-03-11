@@ -2,8 +2,11 @@ package services
 
 import (
 	"bytes"
+	"encoding/json"
 	"io"
 	"net/http"
+	"reflect"
+	"strings"
 	"sync"
 	"time"
 
@@ -46,6 +49,22 @@ func UpdateTestRun(testRunId int64) {
 	models.UpdateTestRun(testRunId, "completed", total, passed, failed, avgDurationMs, minDurationMs, maxDurationMs)
 }
 
+func responsesMatch(respBody []byte, expected string) bool {
+	var respObj interface{}
+	var expectedObj interface{}
+
+	respErr := json.Unmarshal(respBody, &respObj)
+	expErr := json.Unmarshal([]byte(expected), &expectedObj)
+
+	// If both are valid JSON → compare JSON
+	if respErr == nil && expErr == nil {
+		return reflect.DeepEqual(respObj, expectedObj)
+	}
+
+	// fallback: compare trimmed strings
+	return strings.TrimSpace(string(respBody)) == strings.TrimSpace(expected)
+}
+
 func executeJob(testID int64, testRunId int64, jobID int, resultsChan chan<- models.JobResult) {
 	var jobresult models.JobResult
 
@@ -53,6 +72,7 @@ func executeJob(testID int64, testRunId int64, jobID int, resultsChan chan<- mod
 	jobresult.JobNumber = jobID
 
 	test, e := models.GetTestByID(testID)
+
 	if e != nil {
 		// Assigning error string to a variable bcoz e1.Error() returns a value that is temporary
 		// Go doesn't allow taking address of temporary value,
@@ -70,7 +90,9 @@ func executeJob(testID int64, testRunId int64, jobID int, resultsChan chan<- mod
 	// Create request
 	// converting test.Body (string) -> bytes.NewBuffer([]byte(test.Body))
 	// to create a buffer of bytes (io.Reader) that can be sent in the HTTP request body.
-	request, e1 := http.NewRequest(test.Method, test.URL, bytes.NewBuffer([]byte(test.Body)))
+	url := strings.TrimSpace(test.URL)
+	request, e1 := http.NewRequest(test.Method, url, bytes.NewBuffer([]byte(test.Body)))
+
 	if e1 != nil {
 		errStr := e1.Error()
 		jobresult.Error = &errStr
@@ -86,6 +108,7 @@ func executeJob(testID int64, testRunId int64, jobID int, resultsChan chan<- mod
 	// Send request
 	client := &http.Client{Timeout: 10 * time.Second}
 	response, e2 := client.Do(request)
+
 	if e2 != nil {
 		errStr := e2.Error()
 		jobresult.Error = &errStr
@@ -107,6 +130,7 @@ func executeJob(testID int64, testRunId int64, jobID int, resultsChan chan<- mod
 
 	// Read response body
 	respBody, e3 := io.ReadAll(response.Body)
+
 	if e3 != nil {
 		errStr := e3.Error()
 		jobresult.Error = &errStr
@@ -117,8 +141,14 @@ func executeJob(testID int64, testRunId int64, jobID int, resultsChan chan<- mod
 	responsezeStr := int(len(respBody))
 	jobresult.ResponseSize = &responsezeStr
 
-	// Compare response with expected response
-	if string(respBody) == test.ExpectedResponse {
+	statusMatch := true
+
+	if test.StatusCode != nil {
+		statusMatch = *test.StatusCode == response.StatusCode
+	}
+
+	// Compare response with expected response & status code match
+	if responsesMatch(respBody, test.ExpectedResponse) && statusMatch {
 		jobresult.Passed = true
 		jobresult.Status = "completed"
 	} else {
@@ -165,7 +195,7 @@ func runJobs(testID int64, concurrency int, testRunID int64) {
 
 	// Collect results from resultsChan and store them in the database
 	for result := range resultsChan {
-		models.CreateJobResult(result)
+		models.UpdateJobResult(result)
 	}
 
 	// After all jobs are done, update the test run fields

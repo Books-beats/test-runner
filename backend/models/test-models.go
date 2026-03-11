@@ -3,6 +3,7 @@ package models
 import (
 	"context"
 	"encoding/json"
+	"log"
 	"time"
 
 	"main.go/db"
@@ -15,6 +16,7 @@ type TestRequest struct {
 	Headers          map[string]string `json:"headers"`
 	Body             string            `json:"body"`
 	ExpectedResponse string            `json:"expected_response"`
+	StatusCode       *int              `json:"status_code"`
 }
 
 type Test struct {
@@ -26,6 +28,7 @@ type Test struct {
 	Headers          map[string]string `json:"headers"`
 	Body             string            `json:"body"`
 	ExpectedResponse string            `json:"expected_response"`
+	StatusCode       *int              `json:"status_code"`
 	CreatedAt        time.Time         `json:"created_at"`
 	UpdatedAt        time.Time         `json:"updated_at"`
 	LatestRunID      *int64            `json:"latest_run_id,omitempty"`
@@ -42,8 +45,8 @@ func CreateTest(test Test, userID int64) (int64, error) {
 		return 0, err
 	}
 
-	query := `INSERT INTO tests (user_id, name, url, method, headers, body, expected_response) 
-              VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id`
+	query := `INSERT INTO tests (user_id, name, url, method, headers, body, expected_response, status_code) 
+              VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING id`
 
 	// Creating a context to manage the lifecycle of the database operation. This allows for better control over timeouts and cancellations.
 	ctx := context.Background()
@@ -58,6 +61,7 @@ func CreateTest(test Test, userID int64) (int64, error) {
 		headersJSON, // Store as JSON string in PostgreSQL
 		test.Body,
 		test.ExpectedResponse,
+		test.StatusCode,
 	).Scan(&testID)
 
 	if err != nil {
@@ -71,12 +75,12 @@ func GetTestByID(testID int64) (*Test, error) {
 	var test Test
 	var headersJson []byte
 
-	query := `SELECT id, url, method, headers, body, expected_response FROM tests WHERE id = $1`
+	query := `SELECT id, url, method, headers, body, expected_response, status_code FROM tests WHERE id = $1`
 
 	ctx := context.Background()
 	row := db.Pool.QueryRow(ctx, query, testID)
 
-	err := row.Scan(&test.ID, &test.URL, &test.Method, &headersJson, &test.Body, &test.ExpectedResponse)
+	err := row.Scan(&test.ID, &test.URL, &test.Method, &headersJson, &test.Body, &test.ExpectedResponse, &test.StatusCode)
 
 	if err != nil {
 		return nil, err
@@ -91,7 +95,7 @@ func GetAllTests(userID int64) ([]Test, error) {
 	// We run the subquery for each row in the tests table to get the latest test run for that test,
 	// and join it with the tests table to get the latest run id and status along with the test details.
 	query := `
-		SELECT t.id, t.user_id, t.name, t.url, t.method, t.headers, t.body, t.expected_response, t.created_at, t.updated_at,
+		SELECT t.id, t.user_id, t.name, t.url, t.method, t.headers, t.body, t.expected_response, t.status_code, t.created_at, t.updated_at,
                r.id as latest_run_id, r.status as latest_run_status
         FROM tests t
         LEFT JOIN LATERAL (
@@ -125,6 +129,7 @@ func GetAllTests(userID int64) ([]Test, error) {
 			&headersJSON,
 			&test.Body,
 			&test.ExpectedResponse,
+			&test.StatusCode,
 			&test.CreatedAt,
 			&test.UpdatedAt,
 			&test.LatestRunID,
@@ -139,4 +144,56 @@ func GetAllTests(userID int64) ([]Test, error) {
 	}
 
 	return tests, nil
+}
+
+func DeleteTest(testID int64) {
+	query := `DELETE FROM tests where id = $1`
+
+	ctx := context.Background()
+	_, err := db.Pool.Exec(ctx, query, testID)
+
+	if err != nil {
+		log.Println("Failed to delete row with id ", testID)
+	}
+}
+
+func UpdateTest(test Test, testId int64) error {
+	headersJSON, err := json.Marshal(test.Headers)
+	if err != nil {
+		return err
+	}
+
+	query := `
+		UPDATE tests
+		SET name = $1,
+			url = $2,
+			method = $3,
+			headers = $4,
+			body = $5,
+			expected_response = $6,
+			status_code = $7,
+			updated_at = NOW()
+		WHERE id = $8
+	`
+
+	ctx := context.Background()
+
+	_, err = db.Pool.Exec(
+		ctx,
+		query,
+		test.Name,
+		test.URL,
+		test.Method,
+		headersJSON,
+		test.Body,
+		test.ExpectedResponse,
+		test.StatusCode,
+		testId,
+	)
+
+	if err != nil {
+		return err
+	}
+
+	return nil
 }

@@ -21,34 +21,30 @@ type JobResult struct {
 	CompletedAt  *time.Time `json:"completed_at"`
 }
 
-func CreateJobResult(jobResult JobResult) (int64, error) {
+func UpdateJobResult(jobResult JobResult) error {
 	query := `
-	INSERT INTO job_results 
-	(test_run_id, job_number, status, status_code, duration_ms, response_size, passed, error, created_at, completed_at) 
-	VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) RETURNING id
+	UPDATE job_results
+	SET status=$1, status_code=$2, duration_ms=$3, response_size=$4,
+	    passed=$5, error=$6, completed_at=$7
+	WHERE test_run_id=$8 AND job_number=$9
 	`
 
 	ctx := context.Background()
-	var jobResultID int64
-	err := db.Pool.QueryRow(ctx,
+
+	_, err := db.Pool.Exec(ctx,
 		query,
-		jobResult.TestRunID,
-		jobResult.JobNumber,
 		jobResult.Status,
 		jobResult.StatusCode,
 		jobResult.DurationMs,
 		jobResult.ResponseSize,
 		jobResult.Passed,
 		jobResult.Error,
-		jobResult.CreatedAt,
 		jobResult.CompletedAt,
-	).Scan(&jobResultID)
+		jobResult.TestRunID,
+		jobResult.JobNumber,
+	)
 
-	if err != nil {
-		return 0, err
-	}
-
-	return jobResultID, nil
+	return err
 }
 
 func GetJobResultsByTestRunID(testRunID int64) ([]JobResult, error) {

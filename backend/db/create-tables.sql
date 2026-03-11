@@ -22,6 +22,8 @@ CREATE TABLE tests (
     user_id BIGINT NOT NULL,
     
     expected_response TEXT,
+
+    status_code INT,
     
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
 

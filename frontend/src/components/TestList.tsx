@@ -9,8 +9,10 @@ const API_BASE = import.meta.env.VITE_API_URL || "";
 
 export default function TestList({
   refreshTrigger,
+  setEditingTest,
 }: {
   refreshTrigger: number;
+  setEditingTest: (test: Test | null) => void;
 }) {
   const [tests, setTests] = useState<Test[]>([]);
   const [runningTests, setRunningTests] = useState<
@@ -119,6 +121,29 @@ export default function TestList({
     }
   };
 
+  const handleDeleteTest = async (testId: number) => {
+    try {
+      const res = await fetch(`${API_BASE}/tests/${testId}/delete`, {
+        method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      if (res.ok) {
+        setTests((prev) => prev.filter((t) => t.id !== testId));
+      } else {
+        console.error("Delete failed");
+      }
+    } catch (e) {
+      console.error("Error in deleting", e);
+    }
+  };
+
+  const handleEditTest = (test: Test) => {
+    setEditingTest(test);
+  };
+
   if (isLoading) {
     return <div className="text-secondary">Loading tests...</div>;
   }
@@ -143,6 +168,8 @@ export default function TestList({
             runData={runningTests[test.id]}
             onRunTest={openRunDialog}
             onShowResult={handleShowResult}
+            onDelete={handleDeleteTest}
+            onEdit={handleEditTest}
           />
         ))}
       </div>

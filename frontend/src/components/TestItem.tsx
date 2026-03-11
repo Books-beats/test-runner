@@ -1,4 +1,4 @@
-import { Play, Activity, BarChart2 } from "lucide-react";
+import { Play, Activity, BarChart2, Pencil, Trash2 } from "lucide-react";
 import { Test, TestRunResult } from "../types";
 
 interface TestItemProps {
@@ -6,6 +6,8 @@ interface TestItemProps {
   runData?: { runId: number; status: string; result?: TestRunResult };
   onRunTest: (testId: number) => void;
   onShowResult: (runId: number, testId: number) => void;
+  onDelete: (testId: number) => void;
+  onEdit: (test: Test) => void;
 }
 
 export default function TestItem({
@@ -13,6 +15,8 @@ export default function TestItem({
   runData,
   onRunTest,
   onShowResult,
+  onDelete,
+  onEdit,
 }: TestItemProps) {
   return (
     <div
@@ -43,22 +47,30 @@ export default function TestItem({
             <span>{test.url}</span>
           </div>
         </div>
-
-        {!runData || runData.status === "completed" ? (
-          <button
-            className="btn btn-primary"
-            onClick={() => onRunTest(test.id)}
-          >
-            <Play size={16} /> {runData ? "Run Again" : "Run Test"}
+        <div style={{ display: "flex", gap: "0.5rem" }}>
+          <button className="btn btn-outline" onClick={() => onEdit(test)}>
+            <Pencil size={16} />
           </button>
-        ) : (
-          <span
-            className="badge pending"
-            style={{ display: "flex", gap: "0.5rem" }}
-          >
-            <Activity size={14} className="spin-animation" /> Running...
-          </span>
-        )}
+
+          <button className="btn btn-outline" onClick={() => onDelete(test.id)}>
+            <Trash2 size={16} />
+          </button>
+          {!runData || runData.status === "completed" ? (
+            <button
+              className="btn btn-primary"
+              onClick={() => onRunTest(test.id)}
+            >
+              <Play size={16} /> {runData ? "Rerun" : "Run"}
+            </button>
+          ) : (
+            <span
+              className="badge pending"
+              style={{ display: "flex", gap: "0.5rem" }}
+            >
+              <Activity size={14} className="spin-animation" /> Running...
+            </span>
+          )}
+        </div>
       </div>
 
       {runData && (

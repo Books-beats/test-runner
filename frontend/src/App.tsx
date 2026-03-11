@@ -5,11 +5,13 @@ import TestForm from "./components/TestForm";
 import TestList from "./components/TestList";
 import AuthForms from "./components/AuthForms";
 import { AuthProvider, useAuth } from "./context/AuthContext";
+import { Test } from "./types";
 
 function MainApp() {
   const { token, logout } = useAuth();
   const [isDark, setIsDark] = useState(true);
   const [refreshTrigger, setRefreshTrigger] = useState(0);
+  const [editingTest, setEditingTest] = useState<Test | null>(null);
 
   useEffect(() => {
     // Check initial dark mode preference
@@ -73,11 +75,14 @@ function MainApp() {
           }}
         >
           <section>
-            <TestForm onRefresh={handleTestCreated} />
+            <TestForm onRefresh={handleTestCreated} initialTest={editingTest} />
           </section>
 
           <section>
-            <TestList refreshTrigger={refreshTrigger} />
+            <TestList
+              refreshTrigger={refreshTrigger}
+              setEditingTest={setEditingTest}
+            />
           </section>
         </main>
       ) : (
