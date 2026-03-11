@@ -23,7 +23,6 @@ export default function TestList({
   );
   const [concurrencyDialogOpen, setConcurrencyDialogOpen] = useState(false);
   const [testToRun, setTestToRun] = useState<number | null>(null);
-  const [pollingError, setPollingError] = useState<string | null>(null);
   const { token } = useAuth();
 
   const fetchTests = async () => {
@@ -64,64 +63,6 @@ export default function TestList({
   useEffect(() => {
     fetchTests();
   }, [refreshTrigger]);
-
-  useEffect(() => {
-    const intervals: Record<number, number> = {};
-    const errorCounters: Record<number, number> = {};
-    const MAX_RETRIES = 5;
-
-    Object.entries(runningTests).forEach(([testIdStr, runData]) => {
-      const testId = Number(testIdStr);
-      if (runData.status === "pending") {
-        errorCounters[testId] = 0;
-
-        const interval = window.setInterval(async () => {
-          try {
-            const res = await fetch(`${API_BASE}/tests/${runData.runId}`, {
-              headers: { Authorization: `Bearer ${token}` },
-            });
-
-            if (res.ok) {
-              // Reset error counter on success
-              errorCounters[testId] = 0;
-              const data = await res.json();
-              const result = data.result;
-
-              if (result && result.status === "completed") {
-                setRunningTests((prev) => ({
-                  ...prev,
-                  [testId]: { ...prev[testId], status: "completed", result },
-                }));
-                clearInterval(interval);
-              }
-            } else {
-              throw new Error(`HTTP error ${res.status}`);
-            }
-          } catch (err) {
-            console.error(err);
-            errorCounters[testId]++;
-
-            if (errorCounters[testId] >= MAX_RETRIES) {
-              setPollingError(
-                `Failed to poll results for Test Run #${runData.runId}. The server may be down.`,
-              );
-              clearInterval(interval);
-              setRunningTests((prev) => ({
-                ...prev,
-                [testId]: { ...prev[testId], status: "error" },
-              }));
-            }
-          }
-        }, 2000);
-        intervals[testId] = interval;
-      }
-    });
-
-    return () => {
-      Object.values(intervals).forEach(clearInterval);
-      setPollingError(null);
-    };
-  }, [runningTests, token]);
 
   const openRunDialog = (testId: number) => {
     setTestToRun(testId);
@@ -195,30 +136,6 @@ export default function TestList({
 
   return (
     <>
-      {pollingError && (
-        <div
-          style={{
-            backgroundColor: "var(--error-bg)",
-            color: "var(--error)",
-            padding: "1rem",
-            borderRadius: "var(--radius-md)",
-            marginBottom: "1rem",
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-          }}
-        >
-          <span>{pollingError}</span>
-          <button
-            className="icon-btn"
-            style={{ color: "var(--error)" }}
-            onClick={() => setPollingError(null)}
-          >
-            <X size={16} />
-          </button>
-        </div>
-      )}
-
       <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
         {tests.map((test) => (
           <TestItem
