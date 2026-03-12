@@ -146,7 +146,7 @@ func GetAllTests(userID int64) ([]Test, error) {
 	return tests, nil
 }
 
-func DeleteTest(testID int64) {
+func DeleteTest(testID int64) error {
 	query := `DELETE FROM tests where id = $1`
 
 	ctx := context.Background()
@@ -154,7 +154,9 @@ func DeleteTest(testID int64) {
 
 	if err != nil {
 		log.Println("Failed to delete row with id ", testID)
+		return err
 	}
+	return nil
 }
 
 func UpdateTest(test Test, testId int64) error {

@@ -5,7 +5,6 @@ import (
 	"strconv"
 
 	"github.com/gin-gonic/gin"
-	"main.go/models"
 )
 
 func GetTestResult(c *gin.Context) {
@@ -18,7 +17,7 @@ func GetTestResult(c *gin.Context) {
 		return
 	}
 
-	result, err := models.GetTestRunResult(testId)
+	result, err := modelGetTestResult(testId)
 
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Test result not found"})

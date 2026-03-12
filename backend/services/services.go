@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"io"
 	"log"
+	"math"
 	"net/http"
 	"reflect"
 	"strings"
@@ -21,7 +22,8 @@ func UpdateTestRun(testRunId int64) {
 		return
 	}
 	total := len(results)
-	var passed, failed, avgDurationMs, minDurationMs, maxDurationMs int
+	var passed, failed, avgDurationMs, maxDurationMs int
+	minDurationMs := math.MaxInt
 
 	for _, r := range results {
 		if r.Passed {
@@ -34,7 +36,7 @@ func UpdateTestRun(testRunId int64) {
 			duration := *r.DurationMs
 			avgDurationMs += duration
 
-			if minDurationMs == 0 || duration < minDurationMs {
+			if duration < minDurationMs {
 				minDurationMs = duration
 			}
 
@@ -42,6 +44,10 @@ func UpdateTestRun(testRunId int64) {
 				maxDurationMs = duration
 			}
 		}
+	}
+
+	if minDurationMs == math.MaxInt {
+		minDurationMs = 0
 	}
 
 	if total > 0 {
@@ -116,6 +122,7 @@ func executeJob(testID int64, testRunId int64, jobID int, resultsChan chan<- mod
 	if e2 != nil {
 		errStr := e2.Error()
 		jobresult.Error = &errStr
+		resultsChan <- jobresult
 		log.Println("Failed to send the request: ", e2)
 		return
 	}

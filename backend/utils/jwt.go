@@ -2,6 +2,7 @@ package utils
 
 import (
 	"errors"
+	"log"
 	"os"
 	"time"
 
@@ -12,7 +13,7 @@ import (
 var GetSecretKey = func() []byte {
 	secret := os.Getenv("JWT_SECRET")
 	if secret == "" {
-		secret = "supersecret_fallback_key"
+		log.Fatal("JWT_SECRET environment variable is not set")
 	}
 	return []byte(secret)
 }

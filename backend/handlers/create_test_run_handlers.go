@@ -7,14 +7,12 @@ import (
 	"strconv"
 
 	"github.com/gin-gonic/gin"
-	"github.com/joho/godotenv"
 	"main.go/models"
-	"main.go/services"
 )
 
 func ValidateTestRunRequest(testID int64, concurrency int, c *gin.Context) (bool, error) {
 	// Check if testID exists in db
-	exists, err := models.CheckTestIdExists(testID)
+	exists, err := modelCheckTestExists(testID)
 	if err != nil {
 		log.Println("Failed to check test id: ", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "internal server error"})
@@ -27,18 +25,15 @@ func ValidateTestRunRequest(testID int64, concurrency int, c *gin.Context) (bool
 		return false, nil
 	}
 
-	e1 := godotenv.Load()
-	if e1 != nil {
-		log.Println("e1", e1)
+	// Check if concurrency is within allowed limits
+	maxAllowedConcurrency, err := strconv.Atoi(os.Getenv("MAX_ALLOWED_CONCURRENCY"))
+	if err != nil || maxAllowedConcurrency <= 0 {
+		maxAllowedConcurrency = 10
 	}
 
-	// Check if concurrency is within allowed limits
-	maxallowedconcurrency := os.Getenv("MAX_ALLOWED_CONCURRENCY")
-	maxallowedconcurrencyInt, _ := strconv.Atoi(maxallowedconcurrency)
-
-	if concurrency > maxallowedconcurrencyInt {
+	if concurrency > maxAllowedConcurrency {
 		log.Println("Concurrency exceeds")
-		c.JSON(http.StatusBadRequest, gin.H{"error": `Concurrency exceeds the maximum allowed limit of` + maxallowedconcurrency})
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Concurrency exceeds the maximum allowed limit of " + strconv.Itoa(maxAllowedConcurrency)})
 		return false, nil
 	}
 
@@ -77,7 +72,7 @@ func CreateTestRun(c *gin.Context) {
 		return
 	}
 
-	testRunId, status, err := services.StartTestRun(testId, request.Concurrency)
+	testRunId, status, err := serviceStartTestRun(testId, request.Concurrency)
 
 	if err != nil {
 		log.Println("Failed to start test run: ", err)

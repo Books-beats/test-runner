@@ -5,7 +5,6 @@ import (
 	"strconv"
 
 	"github.com/gin-gonic/gin"
-	"main.go/models"
 )
 
 func Delete(c *gin.Context) {
@@ -18,7 +17,7 @@ func Delete(c *gin.Context) {
 	}
 
 	// Check if testID exists in db
-	exists, err := models.CheckTestIdExists(testID)
+	exists, err := modelCheckTestExists(testID)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "internal server error"})
 		return
@@ -29,5 +28,10 @@ func Delete(c *gin.Context) {
 		return
 	}
 
-	models.DeleteTest(testID)
+	if err := modelDeleteTest(testID); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "internal server error"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "test deleted"})
 }

@@ -3,7 +3,6 @@ package models
 import (
 	"context"
 	"errors"
-	"log"
 
 	"golang.org/x/crypto/bcrypt"
 	"main.go/db"
@@ -40,7 +39,6 @@ func AuthenticateUser(email, password string) (*User, error) {
 	ctx := context.Background()
 	var user User
 	err := db.Pool.QueryRow(ctx, query, email).Scan(&user.ID, &user.Email, &user.PasswordHash)
-	log.Print("user", user)
 	if err != nil {
 		return nil, errors.New("invalid credentials")
 	}

@@ -14,9 +14,13 @@ func GetAllTests(c *gin.Context) {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized user"})
 		return
 	}
-	userID := userIDVal.(int64)
+	userID, ok := userIDVal.(int64)
+	if !ok {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized user"})
+		return
+	}
 
-	tests, err := models.GetAllTests(userID)
+	tests, err := modelGetAllTests(userID)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to retrieve tests"})
 		return

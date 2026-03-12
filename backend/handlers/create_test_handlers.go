@@ -15,7 +15,11 @@ func CreateTest(c *gin.Context) {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized user"})
 		return
 	}
-	userID := userIDVal.(int64)
+	userID, ok := userIDVal.(int64)
+	if !ok {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized user"})
+		return
+	}
 
 	var newTest models.Test
 
@@ -30,7 +34,7 @@ func CreateTest(c *gin.Context) {
 		return
 	}
 
-	testID, err := models.CreateTest(newTest, userID)
+	testID, err := modelCreateTest(newTest, userID)
 	if err != nil {
 		log.Println("Failed to create test: ", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "internal server error: " + err.Error()})

@@ -5,8 +5,6 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
-	"main.go/models"
-	"main.go/utils"
 )
 
 type RegisterInput struct {
@@ -28,15 +26,15 @@ func RegisterUser(c *gin.Context) {
 		return
 	}
 
-	userID, err := models.RegisterUser(input.Email, input.Password)
+	userID, err := modelRegisterUser(input.Email, input.Password)
 
 	if err != nil {
-		log.Println("Failer to register user: ", err)
+		log.Println("Failed to register user: ", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to register user"})
 		return
 	}
 
-	token, err := utils.GenerateToken(userID, input.Email)
+	token, err := generateToken(userID, input.Email)
 
 	if err != nil {
 		log.Println("Failed to generate token: ", err)
@@ -58,7 +56,7 @@ func LoginUser(c *gin.Context) {
 		return
 	}
 
-	user, err := models.AuthenticateUser(input.Email, input.Password)
+	user, err := modelAuthenticateUser(input.Email, input.Password)
 
 	if err != nil {
 		log.Println("Failed to authenticate: ", err)
@@ -66,7 +64,7 @@ func LoginUser(c *gin.Context) {
 		return
 	}
 
-	token, err := utils.GenerateToken(user.ID, user.Email)
+	token, err := generateToken(user.ID, user.Email)
 	if err != nil {
 		log.Println("Failed to generate token: ", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to generate token"})
