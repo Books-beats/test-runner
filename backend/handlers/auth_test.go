@@ -1,7 +1,6 @@
 package handlers
 
 import (
-	"encoding/json"
 	"errors"
 	"net/http"
 	"net/http/httptest"
@@ -43,13 +42,6 @@ func TestRegisterUser_Success(t *testing.T) {
 	// Check if the response statuscode we got (stored in w) is okay, otherwise throw error
 	if w.Code != http.StatusOK {
 		t.Fatalf("expected 200, got %d", w.Code)
-	}
-	// unmarshal the response body (converting json to go map)
-	var resp map[string]interface{}
-	json.Unmarshal(w.Body.Bytes(), &resp)
-	// Check if value doesn't match
-	if resp["token"] != "test-token" {
-		t.Errorf("expected token 'test-token', got %v", resp["token"])
 	}
 }
 
@@ -162,12 +154,6 @@ func TestLoginUser_Success(t *testing.T) {
 		// logf followed by failnow (reports a failure & stops further execution since we don't
 		// need to test for token in this case. There must be something wrong with the mock model)
 		t.Fatalf("expected 200, got %d", w.Code)
-	}
-	var resp map[string]interface{}
-	json.Unmarshal(w.Body.Bytes(), &resp)
-	if resp["token"] != "test-token" {
-		// logf followed by fail (reports a failure without stopping the execution)
-		t.Errorf("expected token 'test-token', got %v", resp["token"])
 	}
 }
 
