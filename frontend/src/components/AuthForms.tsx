@@ -160,7 +160,7 @@ export default function AuthForms() {
           </span>
           <button
             type="button"
-            onClick={() => setIsLogin(!isLogin)}
+            onClick={() => { setIsLogin(!isLogin); setEmail(""); setPassword(""); setError(""); }}
             style={{
               background: "none",
               border: "none",
