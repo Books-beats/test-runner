@@ -79,6 +79,8 @@ CREATE TABLE job_results (
     passed BOOLEAN NOT NULL DEFAULT FALSE,
     
     error TEXT,
+
+    status TEXT,
     
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     
