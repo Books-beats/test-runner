@@ -34,7 +34,9 @@ func TestGetAllTests_Success(t *testing.T) {
 	}
 	var resp map[string]interface{}
 	json.Unmarshal(w.Body.Bytes(), &resp)
+	// Type assertion. Check if tests value is of given type or not
 	tests, ok := resp["tests"].([]interface{})
+	// Also, checks the length of the slice
 	if !ok || len(tests) != 2 {
 		t.Errorf("expected 2 tests, got %v", resp["tests"])
 	}

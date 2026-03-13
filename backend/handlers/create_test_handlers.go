@@ -21,7 +21,7 @@ func CreateTest(c *gin.Context) {
 		return
 	}
 
-	var newTest models.Test
+	var newTest models.TestRequest
 
 	// Reads the JSON body, maps it to request Go variable, checks for errors & returns a JSON reposnse
 	err := c.ShouldBindJSON(&newTest)

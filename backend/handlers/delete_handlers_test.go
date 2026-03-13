@@ -15,6 +15,7 @@ func TestDelete_Success(t *testing.T) {
 
 	deleted := false
 	modelCheckTestExists = func(testID int64) (bool, error) { return true, nil }
+	// modify deleted value to check if modelDeleteTest is called or not
 	modelDeleteTest = func(testID int64) error { deleted = true; return nil }
 
 	w := httptest.NewRecorder()
@@ -28,7 +29,9 @@ func TestDelete_Success(t *testing.T) {
 	if w.Code != http.StatusOK {
 		t.Errorf("expected 200, got %d", w.Code)
 	}
+	// If modelDeleteTest is not called
 	if !deleted {
+		// Log followed by fail (doesn't stop the execution)
 		t.Error("expected modelDeleteTest to be called")
 	}
 }
@@ -37,6 +40,7 @@ func TestDelete_InvalidID(t *testing.T) {
 	w := httptest.NewRecorder()
 	c, _ := gin.CreateTestContext(w)
 	c.Params = gin.Params{{Key: "id", Value: "xyz"}}
+	// invalid test id (in this case, sending nil)
 	c.Request, _ = http.NewRequest(http.MethodDelete, "/tests/xyz/delete", nil)
 
 	Delete(c)

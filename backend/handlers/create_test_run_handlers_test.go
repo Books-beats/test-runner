@@ -15,15 +15,19 @@ func TestCreateTestRun_Success(t *testing.T) {
 	orig1, orig2 := modelCheckTestExists, serviceStartTestRun
 	defer func() { modelCheckTestExists, serviceStartTestRun = orig1, orig2 }()
 
+	// model returns true & no error
 	modelCheckTestExists = func(testID int64) (bool, error) { return true, nil }
+	// model returns testrun id, status & no error
 	serviceStartTestRun = func(testID int64, concurrency int) (int64, string, error) {
 		return 55, "pending", nil
 	}
 
+	// set the env variable value
 	t.Setenv("MAX_ALLOWED_CONCURRENCY", "10")
 
 	w := httptest.NewRecorder()
 	c, _ := gin.CreateTestContext(w)
+	// set the params since testid is taken from params
 	c.Params = gin.Params{{Key: "id", Value: "1"}}
 	c.Request, _ = http.NewRequest(http.MethodPost, "/tests/1/run",
 		strings.NewReader(`{"concurrency":3}`))
@@ -31,6 +35,7 @@ func TestCreateTestRun_Success(t *testing.T) {
 
 	CreateTestRun(c)
 
+	// status code 200
 	if w.Code != http.StatusOK {
 		t.Fatalf("expected 200, got %d", w.Code)
 	}
@@ -47,6 +52,7 @@ func TestCreateTestRun_Success(t *testing.T) {
 func TestCreateTestRun_InvalidID(t *testing.T) {
 	w := httptest.NewRecorder()
 	c, _ := gin.CreateTestContext(w)
+	// Set invalid testid
 	c.Params = gin.Params{{Key: "id", Value: "not-a-number"}}
 	c.Request, _ = http.NewRequest(http.MethodPost, "/tests/not-a-number/run",
 		strings.NewReader(`{"concurrency":1}`))
@@ -54,6 +60,7 @@ func TestCreateTestRun_InvalidID(t *testing.T) {
 
 	CreateTestRun(c)
 
+	// 400 statuscode
 	if w.Code != http.StatusBadRequest {
 		t.Errorf("expected 400, got %d", w.Code)
 	}
@@ -69,11 +76,13 @@ func TestCreateTestRun_InvalidBody(t *testing.T) {
 
 	CreateTestRun(c)
 
+	// 400 statuscode, error comes from validateTestrunrequest fn
 	if w.Code != http.StatusBadRequest {
 		t.Errorf("expected 400, got %d", w.Code)
 	}
 }
 
+// This is the case when testid doesn't exists in db
 func TestCreateTestRun_NotFound(t *testing.T) {
 	orig := modelCheckTestExists
 	defer func() { modelCheckTestExists = orig }()
@@ -92,11 +101,13 @@ func TestCreateTestRun_NotFound(t *testing.T) {
 
 	CreateTestRun(c)
 
+	// error comes from validatetestrunrequest
 	if w.Code != http.StatusNotFound {
 		t.Errorf("expected 404, got %d", w.Code)
 	}
 }
 
+// Case when given concurrency exceeeds maxconcurrency (also from validatetestrunrequest fn)
 func TestCreateTestRun_ConcurrencyExceeded(t *testing.T) {
 	orig := modelCheckTestExists
 	defer func() { modelCheckTestExists = orig }()
@@ -119,6 +130,7 @@ func TestCreateTestRun_ConcurrencyExceeded(t *testing.T) {
 	}
 }
 
+// When services.starttestrun is called, testrun couldn't be created in db
 func TestCreateTestRun_ServiceError(t *testing.T) {
 	orig1, orig2 := modelCheckTestExists, serviceStartTestRun
 	defer func() { modelCheckTestExists, serviceStartTestRun = orig1, orig2 }()

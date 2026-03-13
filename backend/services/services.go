@@ -7,6 +7,7 @@ import (
 	"log"
 	"math"
 	"net/http"
+	"os"
 	"reflect"
 	"strings"
 	"sync"
@@ -224,8 +225,13 @@ func StartTestRun(testID int64, concurrency int) (int64, string, error) {
 		log.Println("Failed to create test run: ", e2)
 		return 0, "stopped", e2
 	}
-	log.Println("Starting background runJobs")
-	go runJobs(testID, concurrency, testRunID)
+	if os.Getenv("APP_ENV") == "production" {
+		log.Println("Production: running jobs synchronously")
+		runJobs(testID, concurrency, testRunID)
+	} else {
+		log.Println("Starting background runJobs")
+		go runJobs(testID, concurrency, testRunID)
+	}
 	log.Println("Returning response")
 	return testRunID, status, nil
 }

@@ -15,8 +15,8 @@ type TestRequest struct {
 	Method           string            `json:"method" binding:"required"`
 	Headers          map[string]string `json:"headers"`
 	Body             string            `json:"body"`
-	ExpectedResponse string            `json:"expected_response"`
-	StatusCode       *int              `json:"status_code"`
+	ExpectedResponse string            `json:"expected_response" binding:"required_without=StatusCode"`
+	StatusCode       *int              `json:"status_code" binding:"required_without=ExpectedResponse"`
 }
 
 type Test struct {
@@ -35,7 +35,7 @@ type Test struct {
 	LatestRunStatus  *string           `json:"latest_run_status,omitempty"`
 }
 
-func CreateTest(test Test, userID int64) (int64, error) {
+func CreateTest(test TestRequest, userID int64) (int64, error) {
 	// Marshaling the Headers map into a JSON string to store it in the database.
 	// Converting Go data structrues to JSON or bytes
 	// Headers field is converted to map[string]string in the Test struct,
