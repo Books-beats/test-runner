@@ -34,7 +34,7 @@ func RegisterUser(c *gin.Context) {
 		return
 	}
 
-	_, e := generateToken(userID, input.Email)
+	token, e := generateToken(userID, input.Email)
 
 	if e != nil {
 		log.Println("Failed to generate token: ", e)
@@ -44,6 +44,7 @@ func RegisterUser(c *gin.Context) {
 
 	c.JSON(http.StatusOK, gin.H{
 		"message": "Registration successful",
+		"token":   token,
 	})
 }
 
@@ -63,7 +64,7 @@ func LoginUser(c *gin.Context) {
 		return
 	}
 
-	_, e := generateToken(user.ID, user.Email)
+	token, e := generateToken(user.ID, user.Email)
 	if e != nil {
 		log.Println("Failed to generate token: ", e)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to generate token"})
@@ -72,5 +73,6 @@ func LoginUser(c *gin.Context) {
 
 	c.JSON(http.StatusOK, gin.H{
 		"message": "Login successful",
+		"token":   token,
 	})
 }
