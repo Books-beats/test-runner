@@ -174,7 +174,7 @@ func executeJob(testID int64, testRunId int64, jobID int, resultsChan chan<- mod
 	resultsChan <- jobresult
 }
 
-func runJobs(testID int64, concurrency int, testRunID int64) {
+func RunJobs(testID int64, concurrency int, testRunID int64) {
 	for i := 0; i < concurrency; i++ {
 		_, e3 := models.CreateJob(testRunID, i)
 		if e3 != nil {
@@ -226,11 +226,15 @@ func StartTestRun(testID int64, concurrency int) (int64, string, error) {
 		return 0, "stopped", e2
 	}
 	if os.Getenv("APP_ENV") == "production" {
-		log.Println("Production: running jobs synchronously")
-		runJobs(testID, concurrency, testRunID)
+		log.Println("Production: publishing to QStash")
+		payload := ExecutePayload{TestID: testID, TestRunID: testRunID, Concurrency: concurrency}
+		if err := publishToQStash(payload); err != nil {
+			log.Println("Failed to publish to QStash: ", err)
+			return 0, "stopped", err
+		}
 	} else {
-		log.Println("Starting background runJobs")
-		go runJobs(testID, concurrency, testRunID)
+		log.Println("Local: starting background RunJobs goroutine")
+		go RunJobs(testID, concurrency, testRunID)
 	}
 	log.Println("Returning response")
 	return testRunID, status, nil

@@ -20,4 +20,5 @@ var (
 	modelGetTestResult   func(testRunID int64) (models.TestRun, error)              = models.GetTestRunResult
 
 	serviceStartTestRun func(testID int64, concurrency int) (int64, string, error) = services.StartTestRun
+	serviceRunJobs      func(testID int64, concurrency int, testRunID int64)       = services.RunJobs
 )

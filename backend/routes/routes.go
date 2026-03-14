@@ -32,4 +32,12 @@ func RegisterRoutes(r *gin.Engine) {
 		group.DELETE(":id/delete", handlers.Delete)
 		group.PUT(":id/edit", handlers.Update)
 	}
+
+	// Internal routes — called by QStash webhook only, not by users.
+	// Secured by QStash HMAC signature verification instead of JWT.
+	internal := r.Group("/internal")
+	internal.Use(middlewares.VerifyQStash())
+	{
+		internal.POST("/execute", handlers.ExecuteTestRun)
+	}
 }
