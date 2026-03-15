@@ -29,6 +29,9 @@ export default function TestForm({ onRefresh, initialTest }: TestFormProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const hasAtLeastOneExpectation =
+    expectedResponse.trim() !== "" || statusCode !== null;
+
   const isEditing = !!initialTest;
 
   useEffect(() => {
@@ -89,6 +92,10 @@ export default function TestForm({ onRefresh, initialTest }: TestFormProps) {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!hasAtLeastOneExpectation) {
+      setError("At least one of Expected Response or Expected Status Code is required.");
+      return;
+    }
     setIsSubmitting(true);
     setError(null);
 
@@ -265,7 +272,6 @@ export default function TestForm({ onRefresh, initialTest }: TestFormProps) {
         <div className="form-group">
           <label className="form-label">Expected Response String</label>
           <textarea
-            required
             placeholder="Exact response body string to match against..."
             value={expectedResponse}
             onChange={(e) => setExpectedResponse(e.target.value)}
@@ -276,7 +282,6 @@ export default function TestForm({ onRefresh, initialTest }: TestFormProps) {
           <label className="form-label">Expected Status Code</label>
           <input
             type="number"
-            required
             value={statusCode ?? ""}
             placeholder="200"
             onChange={(e) =>

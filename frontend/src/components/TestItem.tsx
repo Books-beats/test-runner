@@ -18,6 +18,8 @@ export default function TestItem({
   onDelete,
   onEdit,
 }: TestItemProps) {
+  const isRunning = !!runData && runData.status !== "completed";
+
   return (
     <div
       className="card"
@@ -48,9 +50,23 @@ export default function TestItem({
           </div>
         </div>
         <div style={{ display: "flex", gap: "0.5rem" }}>
-          <button className="btn btn-outline" onClick={() => onEdit(test)}>
-            <Pencil size={16} />
-          </button>
+          <span
+            title={
+              isRunning
+                ? "Cannot edit while test is running. Wait for it to complete."
+                : undefined
+            }
+            style={{ display: "inline-flex" }}
+          >
+            <button
+              className="btn btn-outline"
+              onClick={() => onEdit(test)}
+              disabled={isRunning}
+              style={isRunning ? { pointerEvents: "none", opacity: 0.45 } : undefined}
+            >
+              <Pencil size={16} />
+            </button>
+          </span>
 
           <button className="btn btn-outline" onClick={() => onDelete(test.id)}>
             <Trash2 size={16} />
