@@ -1,23 +1,29 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
+import ReCAPTCHA from "react-google-recaptcha";
 import { useAuth } from "../context/AuthContext";
 import { User, Lock, Mail } from "lucide-react";
 
 const API_BASE = import.meta.env.VITE_API_URL || "";
 
 export default function AuthForms() {
+  const recaptchaRef = useRef<ReCAPTCHA>(null);
   const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [recaptchaToken, setRecaptchaToken] = useState<string | null>(null);
 
   const { login } = useAuth();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!recaptchaToken) {
+      setError("Please complete the reCAPTCHA");
+      return;
+    }
     setError("");
     setIsLoading(true);
-
     const url = isLogin ? `${API_BASE}/login` : `${API_BASE}/register`;
 
     try {
@@ -26,7 +32,7 @@ export default function AuthForms() {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify({ email, password, recaptcha_token: recaptchaToken }),
       });
 
       const data = await res.json();
@@ -40,6 +46,8 @@ export default function AuthForms() {
       setError(err.message || "Network error occurred");
     } finally {
       setIsLoading(false);
+      recaptchaRef.current?.reset();
+      setRecaptchaToken(null);
     }
   };
 
@@ -140,6 +148,13 @@ export default function AuthForms() {
             />
           </div>
 
+          <ReCAPTCHA
+            ref={recaptchaRef}
+            sitekey={import.meta.env.VITE_RECAPTCHA_SITE_KEY}
+            onChange={(token) => setRecaptchaToken(token)}
+            onExpired={() => setRecaptchaToken(null)}
+          />
+
           <button
             type="submit"
             className="btn btn-primary"
@@ -148,7 +163,7 @@ export default function AuthForms() {
               marginTop: "0.5rem",
               justifyContent: "center",
             }}
-            disabled={isLoading}
+            disabled={isLoading || !recaptchaToken}
           >
             {isLoading ? "Processing..." : isLogin ? "Sign In" : "Register"}
           </button>
@@ -160,7 +175,14 @@ export default function AuthForms() {
           </span>
           <button
             type="button"
-            onClick={() => { setIsLogin(!isLogin); setEmail(""); setPassword(""); setError(""); }}
+            onClick={() => {
+              setIsLogin(!isLogin);
+              setEmail("");
+              setPassword("");
+              setError("");
+              recaptchaRef.current?.reset();
+              setRecaptchaToken(null);
+            }}
             style={{
               background: "none",
               border: "none",
