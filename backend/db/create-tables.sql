@@ -91,3 +91,15 @@ CREATE TABLE job_results (
         REFERENCES test_runs(id)
         ON DELETE CASCADE
 );
+
+CREATE TABLE recaptcha_logs (
+    id BIGSERIAL PRIMARY KEY,
+    user_id BIGINT,
+    action VARCHAR(50) NOT NULL,
+    success BOOLEAN NOT NULL,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    CONSTRAINT fk_recaptcha_user
+        FOREIGN KEY (user_id)
+        REFERENCES users(id)
+        ON DELETE SET NULL
+);

@@ -21,4 +21,7 @@ var (
 
 	serviceStartTestRun func(testID int64, concurrency int) (int64, string, error) = services.StartTestRun
 	serviceRunJobs      func(testID int64, concurrency int, testRunID int64)       = services.RunJobs
+
+	verifyRecaptcha         func(token string) (*utils.RecaptchaResult, error)        = utils.VerifyRecaptcha
+	modelCreateRecaptchaLog func(userID *int64, action string, success bool) error = models.CreateRecaptchaLog
 )
